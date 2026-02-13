@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidyaGuide AI | Cosmic Navigator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        body { 
+            background-color: #020617; 
+            margin: 0; 
+            overflow-x: hidden; 
+            color: white; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+        }
+        .stars-container { 
+            position: fixed; 
+            inset: 0; 
+            z-index: 0; 
+            pointer-events: none;
+            perspective: 1000px;
+        }
+        .star { 
+            position: absolute; 
+            background: white; 
+            border-radius: 50%; 
+            box-shadow: 0 0 10px 0 rgba(255, 255, 255, 0.5);
+            will-change: transform, opacity;
+        }
+        .glass { 
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.4); }
+            100% { opacity: 0.2; transform: scale(0.8); }
+        }
+
+        .pulse-cyan {
+            animation: pulse-glow 3s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.6); }
+            70% { box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+        }
+
+        .moving-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.25;
+            animation: float 40s infinite alternate ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(120px, -80px) scale(1.3); }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(6, 182, 212, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(6, 182, 212, 0.3);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(6, 182, 212, 0.5);
+        }
+
+        ::selection {
+            background: rgba(6, 182, 212, 0.3);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useCallback } = React;
+        const { motion, AnimatePresence } = window.Motion;
+
+        // ------------------------------------------------------------
+        // Hyper-Dimensional Starfield with Parallax & Cursor Reaction
+        // ------------------------------------------------------------
+        const StarField = ({ intensity = 1 }) => {
+            const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+            const [scrollY, setScrollY] = useState(0);
+            
+            const starLayers = useMemo(() => {
+                const layers = [];
+                for (let layer = 0; layer < 3; layer++) {
+                    const count = layer === 0 ? 70 : layer === 1 ? 50 : 30;
+                    const sizeBase = layer === 0 ? 0.8 : layer === 1 ? 1.6 : 2.5;
+                    const speedFactor = layer === 0 ? 0.02 : layer === 1 ? 0.05 : 0.1;
+                    const twinkleSpeed = layer === 0 ? 5 : layer === 1 ? 4 : 3;
+                    const stars = Array.from({ length: count }).map((_, i) => ({
+                        id: `${layer}-${i}`,
+                        layer,
+                        top: `${Math.random() * 100}%`,
+                        left: `${Math.random() * 100}%`,
+                        size: `${sizeBase + Math.random() * (layer === 0 ? 1 : 2)}px`,
+                        duration: `${twinkleSpeed + Math.random() * 3}s`,
+                        delay: `${Math.random() * 5}s`,
+                        initialX: Math.random() * 100,
+                        initialY: Math.random() * 100,
+                        speedFactor,
+                        depth: layer === 0 ? 0.2 : layer === 1 ? 0.6 : 1,
+                    }));
+                    layers.push(stars);
+                }
+                return layers.flat();
+            }, []);
+
+            useEffect(() => {
+                const handleMove = (e) => {
+                    setMousePos({ x: e.clientX, y: e.clientY });
+                };
+                const handleScroll = () => {
+                    setScrollY(window.scrollY);
+                };
+                window.addEventListener('mousemove', handleMove);
+                window.addEventListener('scroll', handleScroll);
+                return () => {
+                    window.removeEventListener('mousemove', handleMove);
+                    window.removeEventListener('scroll', handleScroll);
+                };
+            }, []);
+
+            return (
+                <div className="stars-container">
+                    <div className="moving-orb w-[600px] h-[600px] bg-cyan-600/20 top-[-10%] right-[-5%] animate-[float_28s_alternate_reverse_infinite]" />
+                    <div className="moving-orb w-[500px] h-[500px] bg-purple-600/20 bottom-[-5%] left-[-5%] animate-[float_35s_alternate_infinite]" />
+                    <div className="moving-orb w-[400px] h-[400px] bg-blue-500/20 top-[40%] left-[20%] animate-[float_45s_alternate_reverse_infinite]" />
+                    
+                    <motion.div 
+                        className="fixed inset-0 z-10 pointer-events-none"
+                        animate={{
+                            background: `radial-gradient(${900 * intensity}px at ${mousePos.x}px ${mousePos.y}px, rgba(6, 182, 212, ${0.18 * intensity}), transparent 70%)`
+                        }}
+                        transition={{ type: 'tween', ease: 'easeOut', duration: 0.3 }}
+                    />
+                    
+                    <div 
+                        className="fixed inset-0 z-5 pointer-events-none"
+                        style={{
+                            background: `radial-gradient(${600 * intensity}px at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,${0.06 * intensity}), transparent 80%)`
+                        }}
+                    />
+
+                    {starLayers.map(star => (
+                        <motion.div
+                            key={star.id}
+                            className="star"
+                            initial={false}
+                            animate={{
+                                x: (mousePos.x - window.innerWidth / 2) * star.speedFactor * 0.4 * intensity,
+                                y: (mousePos.y - window.innerHeight / 2) * star.speedFactor * 0.4 * intensity + (scrollY * star.speedFactor * 0.15),
+                                scale: 1 + star.speedFactor * 0.3,
+                            }}
+                            transition={{
+                                type: 'spring',
+                                damping: 20,
+                                stiffness: 40,
+                                mass: 0.5
+                            }}
+                            style={{
+                                top: star.top,
+                                left: star.left,
+                                width: star.size,
+                                height: star.size,
+                                opacity: (0.4 + star.depth * 0.3) * intensity,
+                                boxShadow: `0 0 ${star.depth * 8}px ${star.depth * 2}px rgba(255,255,255,0.3)`,
+                                animation: `twinkle ${star.duration} infinite ease-in-out`,
+                                animationDelay: star.delay,
+                            }}
+                        />
+                    ))}
+
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        {[...Array(3)].map((_, i) => (
+                            <motion.div
+                                key={`shoot-${i}`}
+                                className="absolute w-[2px] h-[2px] bg-white rounded-full blur-[1px]"
+                                initial={{ 
+                                    top: '10%', 
+                                    left: '110%', 
+                                    opacity: 0,
+                                    boxShadow: '0 0 20px 5px rgba(6,182,212,0.5)'
+                                }}
+                                animate={{ 
+                                    top: ['10%', '90%'],
+                                    left: ['110%', '-10%'],
+                                    opacity: [0, 1, 0],
+                                    scale: [0.5, 1.5, 0.3]
+                                }}
+                                transition={{ 
+                                    duration: 8 + i * 2,
+                                    repeat: Infinity,
+                                    repeatDelay: i * 3,
+                                    ease: "linear"
+                                }}
+                            />
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // ------------------------------------------------------------
+        // Rocket Launch Component (Transition Effect)
+        // ------------------------------------------------------------
+        const RocketLaunch = ({ trigger, onComplete }) => {
+            const [rockets, setRockets] = useState([]);
+            const [showWormhole, setShowWormhole] = useState(false);
+
+            useEffect(() => {
+                if (trigger) {
+                    setShowWormhole(true);
+                    
+                    // Create rocket fleet
+                    const newRockets = [
+                        {
+                            id: Date.now() + Math.random(),
+                            startX: -100,
+                            startY: Math.random() * 60 + 20 + '%',
+                            endX: window.innerWidth + 200,
+                            endY: Math.random() * 40 + 10 + '%',
+                            delay: 0,
+                            scale: 0.8 + Math.random() * 0.5,
+                            rotation: 15 + (Math.random() * 20 - 10)
+                        },
+                        {
+                            id: Date.now() + Math.random() + 1,
+                            startX: -150,
+                            startY: Math.random() * 50 + 30 + '%',
+                            endX: window.innerWidth + 250,
+                            endY: Math.random() * 30 + 20 + '%',
+                            delay: 0.2,
+                            scale: 0.9 + Math.random() * 0.6,
+                            rotation: 10 + (Math.random() * 30 - 15)
+                        },
+                        {
+                            id: Date.now() + Math.random() + 2,
+                            startX: -200,
+                            startY: Math.random() * 70 + 10 + '%',
+                            endX: window.innerWidth + 300,
+                            endY: Math.random() * 50 + 5 + '%',
+                            delay: 0.4,
+                            scale: 0.7 + Math.random() * 0.7,
+                            rotation: 20 + (Math.random() * 20 - 10)
+                        }
+                    ];
+                    setRockets(newRockets);
+
+                    // Trigger page transition after rockets launch
+                    const timer = setTimeout(() => {
+                        setShowWormhole(false);
+                        onComplete();
+                    }, 1800);
+                    
+                    return () => clearTimeout(timer);
+                }
+            }, [trigger]);
+
+            return (
+                <AnimatePresence>
+                    {/* Wormhole Effect */}
+                    {showWormhole && (
+                        <motion.div
+                            className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center"
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1.5 }}
+                            exit={{ opacity: 0, scale: 2 }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                        >
+                            <div className="relative w-full h-full">
+                                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-blue-500/20 blur-3xl animate-pulse"></div>
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-8xl">
+                                    <i className="fas fa-vortex text-cyan-400 animate-spin-slow"></i>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Rockets */}
+                    {rockets.map((rocket) => (
+                        <motion.div
+                            key={rocket.id}
+                            className="fixed z-[60] pointer-events-none"
+                            initial={{ 
+                                left: rocket.startX, 
+                                top: rocket.startY,
+                                opacity: 1,
+                                scale: rocket.scale,
+                                rotate: rocket.rotation
+                            }}
+                            animate={{ 
+                                left: rocket.endX,
+                                top: rocket.endY,
+                                opacity: [1, 1, 0],
+                                scale: [rocket.scale, rocket.scale * 1.2, rocket.scale * 0.8],
+                                rotate: rocket.rotation * 1.5
+                            }}
+                            transition={{ 
+                                duration: 1.8,
+                                delay: rocket.delay,
+                                ease: [0.1, 0.8, 0.2, 1],
+                                opacity: { times: [0, 0.7, 1] }
+                            }}
+                        >
+                            <div className="relative">
+                                <i className="fas fa-rocket text-4xl text-cyan-400 filter drop-shadow-[0_0_15px_rgba(6,182,212,0.7)] transform -rotate-45"></i>
+                                <motion.div 
+                                    className="absolute top-1/2 -right-8 w-16 h-4 bg-gradient-to-l from-cyan-500 via-cyan-400 to-transparent rounded-full blur-md"
+                                    animate={{
+                                        width: [16, 32, 16],
+                                        opacity: [0.8, 1, 0.8],
+                                        scaleX: [1, 1.5, 1]
+                                    }}
+                                    transition={{
+                                        duration: 0.3,
+                                        repeat: Infinity,
+                                        ease: "linear"
+                                    }}
+                                />
+                                {[...Array(5)].map((_, i) => (
+                                    <motion.div
+                                        key={i}
+                                        className="absolute top-1/2 -right-4 w-2 h-2 bg-cyan-300 rounded-full blur-sm"
+                                        initial={{ x: 0, opacity: 1 }}
+                                        animate={{
+                                            x: [-20, -60],
+                                            opacity: [1, 0],
+                                            scale: [1, 0.2]
+                                        }}
+                                        transition={{
+                                            duration: 0.8,
+                                            repeat: Infinity,
+                                            delay: i * 0.1,
+                                            ease: "easeOut"
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            );
+        };
+
+        // ------------------------------------------------------------
+        // Mission Control Page (Second Page)
+        // ------------------------------------------------------------
+        const MissionControl = ({ onBack }) => {
+            const [activeTab, setActiveTab] = useState('resume');
+            
+            const missionStats = [
+                { label: "ATS SCORE", value: "94%", trend: "+12%", icon: "fa-chart-line", color: "text-green-400" },
+                { label: "SKILL GAP", value: "3/12", trend: "-2", icon: "fa-microchip", color: "text-yellow-400" },
+                { label: "ROADMAP", value: "Phase 4", trend: "Lead", icon: "fa-route", color: "text-blue-400" },
+                { label: "COSMIC RANK", value: "Orion", trend: "▲2", icon: "fa-star", color: "text-purple-400" }
+            ];
+
+            const recommendations = [
+                { title: "System Architecture", level: "Advanced", match: "94%", time: "2 weeks", icon: "fa-cubes" },
+                { title: "Cloud Native Patterns", level: "Intermediate", match: "78%", time: "3 weeks", icon: "fa-cloud" },
+                { title: "AI/ML Integration", level: "Expert", match: "62%", time: "5 weeks", icon: "fa-brain" }
+            ];
+
+            return (
+                <motion.div 
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -50 }}
+                    transition={{ duration: 0.8, type: "spring", damping: 15 }}
+                    className="relative z-40 min-h-screen pt-24 pb-20"
+                >
+                    <div className="max-w-7xl mx-auto px-6">
+                        {/* Header with Back Button */}
+                        <div className="flex justify-between items-center mb-12">
+                            <motion.div 
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                className="flex items-center gap-4"
+                            >
+                                <motion.button
+                                    onClick={onBack}
+                                    whileHover={{ scale: 1.1, rotate: -10 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="w-12 h-12 rounded-full glass flex items-center justify-center text-cyan-400 hover:bg-white/10"
+                                >
+                                    <i className="fas fa-arrow-left text-xl"></i>
+                                </motion.button>
+                                <h2 className="text-3xl font-black tracking-tight">
+                                    <span className="text-cyan-400">MISSION</span> CONTROL
+                                </h2>
+                            </motion.div>
+                            <motion.div 
+                                initial={{ x: 20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                className="glass px-6 py-3 rounded-full flex items-center gap-3"
+                            >
+                                <i className="fas fa-satellite-dish text-cyan-400 animate-pulse"></i>
+                                <span className="text-sm font-bold">ACTIVE SCAN</span>
+                                <span className="w-2 h-2 bg-green-400 rounded-full animate-ping"></span>
+                            </motion.div>
+                        </div>
+
+                        {/* Cosmic Stats Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                            {missionStats.map((stat, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ delay: i * 0.1 }}
+                                    whileHover={{ y: -5, borderColor: 'rgba(6, 182, 212, 0.6)' }}
+                                    className="glass p-6 rounded-2xl border border-white/5"
+                                >
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className={`w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center ${stat.color}`}>
+                                            <i className={`fas ${stat.icon}`}></i>
+                                        </div>
+                                        <span className={`text-xs font-bold ${stat.trend.includes('+') ? 'text-green-400' : 'text-yellow-400'}`}>
+                                            {stat.trend}
+                                        </span>
+                                    </div>
+                                    <p className="text-gray-400 text-xs mb-1">{stat.label}</p>
+                                    <p className="text-3xl font-black">{stat.value}</p>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Main Dashboard */}
+                        <div className="grid lg:grid-cols-3 gap-8">
+                            {/* Left Panel - AI Analysis */}
+                            <div className="lg:col-span-2">
+                                <motion.div 
+                                    initial={{ y: 30, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="glass p-8 rounded-3xl mb-8"
+                                >
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                                            <i className="fas fa-robot text-cyan-400"></i>
+                                        </div>
+                                        <h3 className="text-xl font-bold">AI Career Synthesis</h3>
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center p-4 bg-white/5 rounded-xl">
+                                            <div className="flex items-center gap-3">
+                                                <i className="fas fa-file-alt text-cyan-400"></i>
+                                                <span>Resume Optimization</span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-green-400">94%</span>
+                                                <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                                                    <motion.div 
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: '94%' }}
+                                                        transition={{ delay: 0.8, duration: 1 }}
+                                                        className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center p-4 bg-white/5 rounded-xl">
+                                            <div className="flex items-center gap-3">
+                                                <i className="fas fa-code-branch text-purple-400"></i>
+                                                <span>Technical Depth</span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-yellow-400">78%</span>
+                                                <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                                                    <motion.div 
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: '78%' }}
+                                                        transition={{ delay: 0.9, duration: 1 }}
+                                                        className="h-full bg-gradient-to-r from-purple-400 to-pink-500 rounded-full"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center p-4 bg-white/5 rounded-xl">
+                                            <div className="flex items-center gap-3">
+                                                <i className="fas fa-rocket text-blue-400"></i>
+                                                <span>Career Velocity</span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-green-400">+156%</span>
+                                                <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                                                    <motion.div 
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: '100%' }}
+                                                        transition={{ delay: 1.0, duration: 1 }}
+                                                        className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                {/* Learning Path */}
+                                <motion.div 
+                                    initial={{ y: 30, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="glass p-8 rounded-3xl"
+                                >
+                                    <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                        <i className="fas fa-route text-cyan-400"></i>
+                                        RECOMMENDED TRAJECTORY
+                                    </h3>
+                                    <div className="space-y-4">
+                                        {recommendations.map((rec, i) => (
+                                            <motion.div 
+                                                key={i}
+                                                whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,0.05)' }}
+                                                className="flex items-center justify-between p-4 rounded-xl border border-white/5 transition-all"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-cyan-400">
+                                                        <i className={`fas ${rec.icon}`}></i>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold">{rec.title}</h4>
+                                                        <p className="text-xs text-gray-500">{rec.level} • {rec.time}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-cyan-400 font-bold">{rec.match}</span>
+                                                    <p className="text-xs text-gray-500">match</p>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            </div>
+
+                            {/* Right Panel - Mission Timeline */}
+                            <motion.div 
+                                initial={{ y: 30, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.5 }}
+                                className="glass p-8 rounded-3xl"
+                            >
+                                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                    <i className="fas fa-clock text-purple-400"></i>
+                                    MISSION TIMELINE
+                                </h3>
+                                
+                                <div className="space-y-6">
+                                    {[
+                                        { phase: "Phase 1: Foundation", status: "completed", date: "Week 1-2", progress: 100 },
+                                        { phase: "Phase 2: Specialization", status: "in-progress", date: "Week 3-5", progress: 65 },
+                                        { phase: "Phase 3: Mastery", status: "upcoming", date: "Week 6-8", progress: 20 },
+                                        { phase: "Phase 4: Lead Architect", status: "horizon", date: "Week 9-12", progress: 5 }
+                                    ].map((phase, i) => (
+                                        <div key={i} className="relative">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="font-medium">{phase.phase}</span>
+                                                <span className={`text-xs px-3 py-1 rounded-full ${
+                                                    phase.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                                                    phase.status === 'in-progress' ? 'bg-cyan-500/20 text-cyan-400' :
+                                                    'bg-gray-500/20 text-gray-400'
+                                                }`}>
+                                                    {phase.status}
+                                                </span>
+                                            </div>
+                                            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                                <motion.div 
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${phase.progress}%` }}
+                                                    transition={{ delay: 0.8 + i * 0.1, duration: 1 }}
+                                                    className={`h-full rounded-full ${
+                                                        phase.status === 'completed' ? 'bg-green-400' :
+                                                        phase.status === 'in-progress' ? 'bg-gradient-to-r from-cyan-400 to-blue-500' :
+                                                        'bg-gray-500'
+                                                    }`}
+                                                />
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1">{phase.date}</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="mt-8 pt-8 border-t border-white/10">
+                                    <button className="w-full glass py-4 rounded-xl font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-3">
+                                        <i className="fas fa-sync-alt text-cyan-400"></i>
+                                        RECALIBRATE PATH
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </div>
+                </motion.div>
+            );
+        };
+
+        // ------------------------------------------------------------
+        // Main App with Page Navigation
+        // ------------------------------------------------------------
+        const App = () => {
+            const [currentPage, setCurrentPage] = useState('home');
+            const [launchTrigger, setLaunchTrigger] = useState(0);
+            
+            const handleLaunch = () => {
+                setLaunchTrigger(prev => prev + 1);
+            };
+
+            const handleTransitionComplete = () => {
+                setCurrentPage('mission');
+            };
+
+            const handleBackToHome = () => {
+                setCurrentPage('home');
+            };
+
+            return (
+                <div className="relative min-h-screen selection:bg-cyan-500/30">
+                    <StarField intensity={currentPage === 'mission' ? 1.2 : 1} />
+                    
+                    {/* Rocket Launch Layer */}
+                    {currentPage === 'home' && (
+                        <RocketLaunch trigger={launchTrigger} onComplete={handleTransitionComplete} />
+                    )}
+
+                    {/* Page Transition */}
+                    <AnimatePresence mode="wait">
+                        {currentPage === 'home' && (
+                            <motion.div
+                                key="home"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.5 }}
+                            >
+                                {/* Navigation */}
+                                <nav className="relative z-30 flex justify-between items-center p-8 max-w-7xl mx-auto">
+                                    <motion.div 
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ duration: 0.8, type: 'spring' }}
+                                        className="text-2xl font-black tracking-tighter flex items-center gap-3"
+                                    >
+                                        <motion.div 
+                                            whileHover={{ rotate: 360, scale: 1.2 }}
+                                            transition={{ duration: 0.6 }}
+                                            className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/40"
+                                        >
+                                            <i className="fas fa-rocket text-black"></i>
+                                        </motion.div>
+                                        <span>VIDYAGUIDE <span className="text-cyan-400 font-light italic">AI</span></span>
+                                    </motion.div>
+                                    
+                                    <motion.button 
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        whileHover={{ scale: 1.08, borderColor: 'rgba(6, 182, 212, 0.6)', backgroundColor: 'rgba(255,255,255,0.08)' }}
+                                        whileTap={{ scale: 0.95 }}
+                                        className="glass px-6 py-2 rounded-full text-xs font-bold tracking-widest hover:bg-white/10 transition border-white/20"
+                                    >
+                                        MISSION LOG
+                                    </motion.button>
+                                </nav>
+
+                                {/* Hero Section */}
+                                <main className="relative z-30 max-w-7xl mx-auto px-6 pt-20 flex flex-col items-center text-center">
+                                    <div className="mb-20">
+                                        <motion.h1 
+                                            initial={{ opacity: 0, y: 40 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.8, ease: "easeOut" }}
+                                            className="text-5xl md:text-8xl font-black mb-8 leading-[1.1] tracking-tight"
+                                        >
+                                            ESCAPE THE <br/>
+                                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-pulse">
+                                                CAREER VOID
+                                            </span>
+                                        </motion.h1>
+
+                                        <motion.p 
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{ delay: 0.4, duration: 1 }}
+                                            className="max-w-2xl text-gray-400 text-lg md:text-xl mb-12 leading-relaxed mx-auto"
+                                        >
+                                            VidyaGuide is your autonomous career pilot. We use cosmic AI to analyze your skills, polish your resume, and chart a roadmap to your dream role.
+                                        </motion.p>
+                                        
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.6 }}
+                                            className="flex flex-wrap gap-6 justify-center"
+                                        >
+                                            <motion.button 
+                                                onClick={handleLaunch}
+                                                whileHover={{ scale: 1.08, boxShadow: '0 0 30px rgba(6,182,212,0.5)' }}
+                                                whileTap={{ scale: 0.95 }}
+                                                className="pulse-cyan bg-cyan-500 text-black px-10 py-4 rounded-2xl font-black hover:scale-105 transition-all active:scale-95 shadow-xl shadow-cyan-500/20"
+                                            >
+                                                INITIALIZE SCAN
+                                            </motion.button>
+                                            <motion.button 
+                                                whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.12)' }}
+                                                whileTap={{ scale: 0.95 }}
+                                                className="glass px-10 py-4 rounded-2xl font-black hover:bg-white/10 transition-all border-white/10"
+                                            >
+                                                VIEW STAR MAPS
+                                            </motion.button>
+                                        </motion.div>
+                                    </div>
+
+                                    {/* Feature Cards */}
+                                    <div className="grid md:grid-cols-3 gap-8 w-full pb-32">
+                                        {[
+                                            { title: "AI Resume Mentor", icon: "fa-file-code", color: "text-cyan-400", desc: "Real-time ATS optimization and keyword alignment." },
+                                            { title: "Skill Assessment", icon: "fa-microchip", color: "text-purple-400", desc: "Interactive evaluations to benchmark your technical depth." },
+                                            { title: "Career Roadmaps", icon: "fa-route", color: "text-blue-400", desc: "Step-by-step navigation from your current role to Lead Architect." }
+                                        ].map((item, i) => (
+                                            <motion.div 
+                                                key={i}
+                                                initial={{ opacity: 0, y: 50 }}
+                                                whileInView={{ opacity: 1, y: 0 }}
+                                                viewport={{ once: true, margin: "-50px" }}
+                                                transition={{ delay: i * 0.2, duration: 0.6, type: 'spring', stiffness: 50 }}
+                                                whileHover={{ 
+                                                    y: -16, 
+                                                    borderColor: "rgba(6, 182, 212, 0.6)",
+                                                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                                                    scale: 1.02,
+                                                    transition: { duration: 0.2 }
+                                                }}
+                                                className="glass p-10 rounded-[2.5rem] text-left group transition-all duration-300 border border-transparent hover:shadow-2xl hover:shadow-cyan-500/10"
+                                            >
+                                                <motion.div 
+                                                    whileHover={{ rotate: 10, scale: 1.2 }}
+                                                    transition={{ type: 'spring', stiffness: 300 }}
+                                                    className={`w-14 h-14 mb-8 rounded-2xl bg-white/5 flex items-center justify-center text-2xl ${item.color} group-hover:scale-110 transition-transform duration-500`}
+                                                >
+                                                    <i className={`fas ${item.icon}`}></i>
+                                                </motion.div>
+                                                <h3 className="text-2xl font-bold mb-4 tracking-tight">{item.title}</h3>
+                                                <p className="text-gray-500 leading-relaxed group-hover:text-gray-300 transition-colors">
+                                                    {item.desc}
+                                                </p>
+                                                <motion.div 
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    whileHover={{ opacity: 1, x: 0 }}
+                                                    className="mt-8 flex items-center gap-2 text-xs font-bold text-cyan-500"
+                                                >
+                                                    LEARN MORE <i className="fas fa-arrow-right text-[10px]"></i>
+                                                </motion.div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </main>
+
+                                {/* Footer */}
+                                <footer className="relative z-30 p-12 text-center border-t border-white/5 bg-black/20 backdrop-blur-sm">
+                                    <motion.p 
+                                        initial={{ opacity: 0.5 }}
+                                        whileHover={{ opacity: 1, letterSpacing: '0.7em' }}
+                                        transition={{ duration: 0.3 }}
+                                        className="text-[10px] tracking-[0.5em] text-gray-500 uppercase"
+                                    >
+                                        VidyaGuide AI Agent &bull; 2026 Cosmic Division &bull; All Rights Reserved
+                                    </motion.p>
+                                </footer>
+                            </motion.div>
+                        )}
+
+                        {currentPage === 'mission' && (
+                            <motion.div
+                                key="mission"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.5 }}
+                            >
+                                <MissionControl onBack={handleBackToHome} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
